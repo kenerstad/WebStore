@@ -12,6 +12,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 using WebStore.Models;
 using WebStore.Data;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using WebStore.Services;
 
 namespace WebStore
 {
@@ -33,6 +36,31 @@ namespace WebStore
                 options.UseSqlServer(Configuration.GetConnectionString("WebStoreContext"));
             });
 
+
+            services.AddIdentity<IdentityUser, IdentityRole>(options =>
+            {
+            // Default Password settings.
+            options.Password.RequireDigit = false;
+            options.Password.RequireLowercase = false;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequireUppercase = false;
+            options.Password.RequiredLength = 3;
+            options.Password.RequiredUniqueChars = 1;
+
+            options.SignIn.RequireConfirmedEmail = true;
+            options.SignIn.RequireConfirmedPhoneNumber = false;
+            })
+            // services.AddDefaultIdentity<IdentityUser>()
+                .AddEntityFrameworkStores<WebStoreDbContext>()
+                .AddDefaultTokenProviders();
+  /*
+            services.Configure<IdentityOptions>(options =>
+            {
+                // Default SignIn settings.
+                options.SignIn.RequireConfirmedEmail = true;
+                options.SignIn.RequireConfirmedPhoneNumber = false;
+            });
+*/
             services.AddTransient<IItemRepository, ItemRepository>();
 
             services.Configure<CookiePolicyOptions>(options =>
@@ -42,10 +70,24 @@ namespace WebStore
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = $"/Identity/Account/Login";
+                options.LogoutPath = $"/Identity/Account/Logout";
+                options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
+            });
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
-        }
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2)
+            .AddRazorPagesOptions(options =>
+            {
+                options.AllowAreas = true;
+                options.Conventions.AuthorizeAreaFolder("Identity", "/Account/Manage");
+                options.Conventions.AuthorizeAreaPage("Identity", "/Account/Logout");
+            });
+            services.AddSingleton<IEmailSender, EmailSender>();
+
+            }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
