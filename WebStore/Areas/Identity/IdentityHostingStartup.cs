@@ -14,10 +14,10 @@ namespace WebStore.Areas.Identity
     {
         public void Configure(IWebHostBuilder builder)
         {
-            builder.ConfigureServices((context, services) => {
-                services.AddDefaultIdentity<IdentityUser>()
-                    .AddEntityFrameworkStores<WebStoreDbContext>();
-            });
+            builder.ConfigureServices((context, services) =>
+            {
+          
+            });         
         }
     }
 }
